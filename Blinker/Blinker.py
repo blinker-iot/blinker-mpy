@@ -290,6 +290,9 @@ class BlinkerMpy:
                                 bProto.aliPowerSrareFunc(value, data['num'])
                             else :
                                 bProto.aliPowerSrareFunc(value)
+                    elif key == 'col':
+                        if bProto.aliSetColorFunc:
+                            bProto.aliSetColorFunc(value)
                     elif key == 'clr':
                         if bProto.aliSetColorFunc:
                             bProto.aliSetColorFunc(value)
@@ -326,6 +329,9 @@ class BlinkerMpy:
                 elif data == 'pState':
                     if bProto.aliQueryFunc:
                         bProto.aliQueryFunc(BLINKER_CMD_QUERY_POWERSTATE_NUMBER)
+                elif data == 'col':
+                    if bProto.aliQueryFunc:
+                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_COLOR_NUMBER)
                 elif data == 'clr':
                     if bProto.aliQueryFunc:
                         bProto.aliQueryFunc(BLINKER_CMD_QUERY_COLOR_NUMBER)
