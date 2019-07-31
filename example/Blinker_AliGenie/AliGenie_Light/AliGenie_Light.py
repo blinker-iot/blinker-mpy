@@ -121,20 +121,20 @@ def aligenieRelativeBright(bright):
     BlinkerAliGenie.brightness(bright)
     BlinkerAliGenie.print()
 
-def aligenieColoTemp(_colorTemp)
+def aligenieColorTemp(colorTemp):
     ''' '''
 
-    BLINKER_LOG('need set colorTemperature: ', _colorTemp)
+    BLINKER_LOG('need set colorTemperature: ', colorTemp)
 
-    BlinkerAliGenie.colorTemp(_colorTemp)
+    BlinkerAliGenie.colorTemp(colorTemp)
     BlinkerAliGenie.print()
 
-def aligenieRelativeColoTemp(_colorTemp)
+def aligenieRelativeColorTemp(colorTemp):
     ''' '''
 
-    BLINKER_LOG('need set relative colorTemperature: ', _colorTemp)
+    BLINKER_LOG('need set relative colorTemperature: ', colorTemp)
 
-    BlinkerAliGenie.colorTemp(_colorTemp)
+    BlinkerAliGenie.colorTemp(colorTemp)
     BlinkerAliGenie.print()
 
 def aligenieQuery(queryCode):
@@ -209,8 +209,8 @@ BlinkerAliGenie.attachMode(aligenieMode)
 BlinkerAliGenie.attachCancelMode(aligeniecMode)
 BlinkerAliGenie.attachBrightness(aligenieBright)
 BlinkerAliGenie.attachRelativeBrightness(aligenieRelativeBright)
-BlinkerAliGenie.attachColorTemperature(aligenieColoTemp)
-BlinkerAliGenie.attachRelativeColorTemperature(aligenieRelativeColoTemp)
+BlinkerAliGenie.attachColorTemperature(aligenieColorTemp)
+BlinkerAliGenie.attachRelativeColorTemperature(aligenieRelativeColorTemp)
 BlinkerAliGenie.attachQuery(aligenieQuery)
 
 if __name__ == '__main__':
