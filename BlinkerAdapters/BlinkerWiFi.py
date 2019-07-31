@@ -20,10 +20,13 @@ class MQTTProtocol(object):
     uuid = ''
     msgBuf = ''
     isRead = False
+    isAliRead = False
     state = CONNECTING
     isAlive = False
+    isAliAlive = False
     printTime = 0
     kaTime = 0
+    aliKaTime = 0
     debug = BLINKER_DEBUG
     smsTime = 0
     pushTime = 0
@@ -32,6 +35,54 @@ class MQTTProtocol(object):
     aqiTime = 0
 
 class BlinkerMQTT(MQTTProtocol):
+    def checkKA(self):
+        if self.isAlive is False:
+            return False
+        if (millis() - self.kaTime) < BLINKER_MQTT_KEEPALIVE:
+            return True
+        else:
+            self.isAlive = False
+            return False
+
+    def checkCanPrint(self):
+        if self.checkKA() is False:
+            BLINKER_ERR_LOG("MQTT NOT ALIVE OR MSG LIMIT")
+            return False
+        if (millis() - self.printTime) >= BLINKER_MQTT_MSG_LIMIT or self.printTime == 0:
+            return True
+        BLINKER_ERR_LOG("MQTT NOT ALIVE OR MSG LIMIT")
+        return False
+
+    def checkSMS(self):
+        if (millis() - self.smsTime) >= BLINKER_SMS_MSG_LIMIT or self.smsTime == 0:
+            return True
+        BLINKER_ERR_LOG("SMS MSG LIMIT")
+        return False
+
+    def checkPUSH(self):
+        if (millis() - self.pushTime) >= BLINKER_PUSH_MSG_LIMIT or self.pushTime == 0:
+            return True
+        BLINKER_ERR_LOG("PUSH MSG LIMIT")
+        return False
+
+    def checkWECHAT(self):
+        if (millis() - self.wechatTime) >= BLINKER_PUSH_MSG_LIMIT or self.wechatTime == 0:
+            return True
+        BLINKER_ERR_LOG("WECHAT MSG LIMIT")
+        return False
+
+    def checkWEATHER(self):
+        if (millis() - self.weatherTime) >= BLINKER_WEATHER_MSG_LIMIT or self.weatherTime == 0:
+            return True
+        BLINKER_ERR_LOG("WEATHER MSG LIMIT")
+        return False
+
+    def checkAQI(self):
+        if (millis() - self.aqiTime) >= BLINKER_AQI_MSG_LIMIT or self.aqiTime == 0:
+            return True
+        BLINKER_ERR_LOG("AQI MSG LIMIT")
+        return False
+
     def delay100ms(self):
         start = millis()
         time_run = 0
@@ -56,27 +107,13 @@ class BlinkerMQTT(MQTTProtocol):
         url = '/api/v1/user/device/diy/auth?authKey=' + auth
 
         if aliType :
-            url = url + '&aliType=' + aliType
+            url = url + aliType
 
         if duerType :
-            url = url + '&duerType=' + duerType
-
-        # conn = HTTPConnection(host)
-        # #conn = HTTPConnection("python.org")
-        # conn.request("GET", url)
-        # resp = conn.getresponse()
-        # BLINKER_LOG(resp)
-        # BLINKER_LOG(resp.read())
+            url = url + duerType
 
         r = requests.get(host + url)
-        # BLINKER_LOG(r)
-        # BLINKER_LOG(r.content)
-        # BLINKER_LOG(r.text)
-        # BLINKER_LOG(r.content)
-        # BLINKER_LOG(r.json())
 
-
-        # root = ujson.loads(r.text)
         data = r.json()
         cls().checkAuthData(data)
         # if cls().isDebugAll() is True:
@@ -98,6 +135,7 @@ class BlinkerMQTT(MQTTProtocol):
         BLINKER_LOG_ALL('productKey: ', productKey)
         BLINKER_LOG_ALL('uuid: ', uuid)
         BLINKER_LOG_ALL('broker: ', broker)
+        BLINKER_LOG_ALL('host + url: ', host + url)
 
         if broker == 'aliyun':
             bmt.host = BLINKER_MQTT_ALIYUN_HOST
@@ -144,16 +182,43 @@ class MQTTClients():
     def on_message(self, topic, msg):
         BLINKER_LOG_ALL('payload: ', msg)
         data = ujson.loads(msg)
+        fromDevice = data['fromDevice']
         data = data['data']
         data = ujson.dumps(data)
         BLINKER_LOG_ALL('data: ', data)
-        self.bmqtt.msgBuf = data
-        self.bmqtt.isRead = True
-        self.bmqtt.isAlive = True
-        self.bmqtt.kaTime = millis()
+        if fromDevice == self.bmqtt.uuid :
+            self.bmqtt.msgBuf = data
+            self.bmqtt.isRead = True
+            self.bmqtt.isAlive = True
+            self.bmqtt.kaTime = millis()
+        elif fromDevice == 'AliGenie':
+            self.bmqtt.msgBuf = data
+            self.bmqtt.isAliRead = True
+            self.bmqtt.isAliAlive = True
+            self.bmqtt.aliKaTime = millis()            
 
     def pub(self, msg, state=False):
+        if state is False:
+            if self.bmqtt.checkCanPrint() is False:
+                return
         payload = {'fromDevice': self.bmqtt.deviceName, 'toDevice': self.bmqtt.uuid, 'data': msg , 'deviceType': 'OwnApp'}
+        payload = ujson.dumps(payload)
+        # if self.bmqtt.isDebugAll() is True:
+        BLINKER_LOG_ALL('Publish topic: ', self.bmqtt.pubtopic)
+        BLINKER_LOG_ALL('payload: ', payload)
+        self.client.publish(self.bmqtt.pubtopic, payload)
+        self.bmqtt.printTime = millis()
+
+    def aliPrint(self, msg):
+        payload = {'fromDevice': self.bmqtt.deviceName, 'toDevice': 'AliGenie_r', 'data': msg , 'deviceType': 'vAssistant'}
+        payload = ujson.dumps(payload)
+        # if self.bmqtt.isDebugAll() is True:
+        BLINKER_LOG_ALL('Publish topic: ', self.bmqtt.pubtopic)
+        BLINKER_LOG_ALL('payload: ', payload)
+        self.client.publish(self.bmqtt.pubtopic, payload)    
+
+    def duerPrint(self, msg):
+        payload = {'fromDevice': self.bmqtt.deviceName, 'toDevice': 'DuerOS_r', 'data': msg , 'deviceType': 'vAssistant'}
         payload = ujson.dumps(payload)
         # if self.bmqtt.isDebugAll() is True:
         BLINKER_LOG_ALL('Publish topic: ', self.bmqtt.pubtopic)
@@ -183,6 +248,8 @@ class MQTTClients():
 
     def reconnect(self):
         try:
+            MQTTClients.register(self)
+
             self.client = MQTTClient(client_id = self.bmqtt.clientID, 
                 server = self.bmqtt.host, port = self.bmqtt.port, 
                 user = self.bmqtt.userName, password =self.bmqtt.password, 

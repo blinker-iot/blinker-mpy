@@ -7,14 +7,16 @@ from Blinker.Blinker import Blinker, BlinkerButton, BlinkerNumber
 from Blinker.BlinkerDebug import *
 
 auth = 'Your Device Secret Key'
+ssid = 'Your WiFi network SSID or name'
+pswd = 'Your WiFi network WPA password or WEP key'
 
 BLINKER_DEBUG.debugAll()
 
-Blinker.mode("BLINKER_WIFI")
-Blinker.begin(auth)
+Blinker.mode('BLINKER_WIFI')
+Blinker.begin(auth, ssid, pswd)
 
-button1 = BlinkerButton("btn-abc")
-number1 = BlinkerNumber("num-abc")
+button1 = BlinkerButton('btn-abc')
+number1 = BlinkerNumber('num-abc')
 
 counter = 0
 pinValue = 0
@@ -23,7 +25,7 @@ p2 = Pin(2, Pin.OUT)
 p2.value(pinValue)
 
 def button1_callback(state):
-    """ """
+    ''' '''
 
     BLINKER_LOG('get button state: ', state)
 
@@ -40,7 +42,7 @@ def button1_callback(state):
 def data_callback(data):
     global counter
     
-    BLINKER_LOG("Blinker readString: ", data)
+    BLINKER_LOG('Blinker readString: ', data)
     counter += 1
     number1.print(counter)
 

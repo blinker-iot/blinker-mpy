@@ -56,6 +56,16 @@ class Protocol():
         self.aliType = None
         self.duerType = None
 
+        self.aliPowerSrareFunc = None
+        self.aliSetColorFunc = None
+        self.aliSetModeFunc = None
+        self.aliSetcModeFunc = None
+        self.aliSetBrightFunc = None
+        self.aliRelateBrightFunc = None
+        self.aliSetColorTempFunc = None
+        self.aliRelateColorTempFunc = None
+        self.aliQueryFunc = None
+
 bProto = Protocol()
 
 wlan = WLAN(STA_IF)
@@ -74,14 +84,26 @@ class BlinkerMpy:
             bProto.proto1 = bMQTT
             bProto.conn1 = bProto.proto1.MQTTClients()
 
-    def aliTye(self, _type):
-        if _type == BLINKER_ALIGENIE_LIGHT or _type == BLINKER_ALIGENIE_OUTLET or _type == BLINKER_ALIGENIE_SENSOR :
-            bProto.aliType = _type
+    def aliType(self, _type):
+        if _type == 'BLINKER_ALIGENIE_LIGHT':
+            bProto.aliType = '&aliType=light'
+        elif _type == 'BLINKER_ALIGENIE_OUTLET':
+            bProto.aliType = '&aliType=outlet'
+        elif _type == 'BLINKER_ALIGENIE_MULTI_OUTLET':
+            bProto.aliType = '&aliType=multi_outlet'
+        elif _type == 'BLINKER_ALIGENIE_SENSOR':
+            bProto.aliType = '&aliType=sensor'
 
     def duerType(self, _type):
-        if _type == BLINKER_DUEROS_LIGHT or _type == BLINKER_DUEROS_OUTLET or _type == BLINKER_DUEROS_SENSOR :
-            bProto.duerType = _type
-
+        if _type == 'BLINKER_DUEROS_LIGHT':
+            bProto.duerType = '&duerType=LIGHT'
+        elif _type == 'BLINKER_DUEROS_OUTLET':
+            bProto.duerType = '&duerType=SOCKET'
+        elif _type == 'BLINKER_DUEROS_MULTI_OUTLET':
+            bProto.duerType = '&duerType=MULTI_SOCKET'        
+        elif _type == 'BLINKER_DUEROS_SENSOR':
+            bProto.duerType = '&duerType=AIR_MONITOR'
+        
     def begin(self, auth = None, ssid = None, pswd = None):
         if bProto.conType == "BLINKER_BLE":
             BLINKER_LOG('MODE: BLINKER_BLE')
@@ -113,6 +135,10 @@ class BlinkerMpy:
                 bProto.isRead = True
                 bProto.conn1.bmqtt.isRead = False
                 BlinkerMpy.parse(self)
+            if bProto.conn1.bmqtt.isAliRead is True:
+                bProto.msgBuf = bProto.conn1.bmqtt.msgBuf
+                bProto.conn1.bmqtt.isAliRead = False
+                BlinkerMpy.aliParse(self)
             # if bProto.proto2.wsProto.isRead is True:
             #     bProto.msgBuf = str(bProto.proto2.wsProto.msgBuf)
             #     bProto.msgFrom = "BLINKER_WIFI"
@@ -246,6 +272,94 @@ class BlinkerMpy:
     def times(self):
         return millis()
 
+    def aliParse(self):
+        data = bProto.msgBuf
+        if not data:
+            return
+        try:
+            data = ujson.loads(data)
+            BLINKER_LOG(data)
+            # if data.has_key('set'):
+            if 'set' in data.keys():
+                data = data['set']
+                for key, value in data.items():
+                    if key == 'pState':
+                        if bProto.aliPowerSrareFunc:
+                            # if data.has_key('num'):
+                            if 'num' in data.keys():
+                                bProto.aliPowerSrareFunc(value, data['num'])
+                            else :
+                                bProto.aliPowerSrareFunc(value)
+                    elif key == 'clr':
+                        if bProto.aliSetColorFunc:
+                            bProto.aliSetColorFunc(value)
+                    elif key == 'bright':
+                        if bProto.aliSetBrightFunc:
+                            bProto.aliSetBrightFunc(value)
+                    elif key == 'upBright':
+                        if bProto.aliRelateBrightFunc:
+                            bProto.aliRelateBrightFunc(value)
+                    elif key == 'downBright':
+                        if bProto.aliRelateBrightFunc:
+                            bProto.aliRelateBrightFunc(value)
+                    elif key == 'colTemp':
+                        if bProto.aliSetColorTempFunc:
+                            bProto.aliSetColorTempFunc(value)
+                    elif key == 'upColTemp':
+                        if bProto.aliRelateColorTempFunc:
+                            bProto.aliRelateColorTempFunc(value)
+                    elif key == 'downColTemp':
+                        if bProto.aliRelateColorTempFunc:
+                            bProto.aliRelateColorTempFunc(value)
+                    elif key == 'mode':
+                        if bProto.aliSetModeFunc:
+                            bProto.aliSetModeFunc(value)
+                    elif key == 'cMode':
+                        if bProto.aliSetcModeFunc:
+                            bProto.aliSetcModeFunc(value)
+            # elif data.has_key('get'):
+            elif 'get' in data.keys():
+                data = data['get']
+                if data == 'state':
+                    if bProto.aliQueryFunc:
+                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_ALL_NUMBER)
+                elif data == 'pState':
+                    if bProto.aliQueryFunc:
+                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_POWERSTATE_NUMBER)
+                elif data == 'clr':
+                    if bProto.aliQueryFunc:
+                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_COLOR_NUMBER)
+                elif data == 'colTemp':
+                    if bProto.aliQueryFunc:
+                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_COLORTEMP_NUMBER)
+                elif data == 'bright':
+                    if bProto.aliQueryFunc:
+                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_BRIGHTNESS_NUMBER)
+                elif data == 'temp':
+                    if bProto.aliQueryFunc:
+                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_TEMP_NUMBER)
+                elif data == 'humi':
+                    if bProto.aliQueryFunc:
+                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_HUMI_NUMBER)
+                elif data == 'pm25':
+                    if bProto.aliQueryFunc:
+                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_PM25_NUMBER)
+                elif data == 'pState':
+                    if bProto.aliQueryFunc:
+                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_POWERSTATE_NUMBER)
+                elif data == 'mode':
+                    if bProto.aliQueryFunc:
+                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_MODE_NUMBER)
+
+        except ValueError:
+            pass
+        except TypeError:
+            pass
+        finally:
+            pass
+
+
+
     def parse(self):
         data = bProto.msgBuf
         if not data:
@@ -323,6 +437,35 @@ class BlinkerMpy:
             if bProto.summaryFunc :
                 bProto.summaryFunc()
 
+    def attachAliGenieSetPowerState(self, _func):
+        bProto.aliPowerSrareFunc = _func
+    
+    def attachAliGenieSetColor(self, _func):
+        bProto.aliSetColorFunc = _func
+
+    def attachAliGenieSetMode(self, _func):
+        bProto.aliSetModeFunc = _func
+
+    def attachAliGenieSetcMode(self, _func):
+        bProto.aliSetcModeFunc = _func
+
+    def attachAliGenieSetBrightness(self, _func):
+        bProto.aliSetBrightFunc = _func
+
+    def attachAliGenieRelativeBrightness(self, _func):
+        bProto.aliRelateBrightFunc = _func
+
+    def attachAliGenieSetColorTemperature(self, _func):
+        bProto.aliSetColorTempFunc = _func
+
+    def attachAliGenieRelativeColorTemperature(self, _func):
+        bProto.aliRelateColorTempFunc = _func
+
+    def attachAliGenieQuery(self, _func):
+        bProto.aliQueryFunc = _func
+
+    def aliPrint(self, data):
+        bProto.conn1.aliPrint(data)
 
 Blinker = BlinkerMpy()
 
@@ -555,5 +698,68 @@ class BlinkerSwitch(object):
     def print(self, _state):
         Blinker.print(self.name, _state)
 
+class BLINKERA_LIGENIE():
+    def __init__(self):
+        self.payload = {}
+
+    def attachPowerState(self, _func):
+        Blinker.attachAliGenieSetPowerState(_func)
+
+    def attachColor(self, _func):
+        Blinker.attachAliGenieSetColor(_func)
+
+    def attachMode(self, _func):
+        Blinker.attachAliGenieSetMode(_func)
+
+    def attachCancelMode(self, _func):
+        Blinker.attachAliGenieSetcMode(_func)
+    
+    def attachBrightness(self, _func):
+        Blinker.attachAliGenieSetBrightness(_func)
+
+    def attachRelativeBrightness(self, _func):
+        Blinker.attachAliGenieRelativeBrightness(_func)
+
+    def attachColorTemperature(self, _func):
+        Blinker.attachAliGenieSetColorTemperature(_func)
+
+    def attachRelativeColorTemperature(self, _func):
+        Blinker.attachAliGenieRelativeColorTemperature(_func)
+
+    def attachQuery(self, _func):
+        Blinker.attachAliGenieQuery(_func)
+
+    def powerState(self, state, num = None):
+        self.payload['pState'] = state
+        if num :
+            self.payload['num'] = num
+
+    def color(self, clr):
+        self.payload['clr'] = clr
+
+    def mode(self, md):
+        self.payload['mode'] = md
+
+    def colorTemp(self, clrTemp):
+        self.payload['colTemp'] = clrTemp
+
+    def brightness(self, bright):
+        self.payload['bright'] = bright
+
+    def temp(self, tem):
+        self.payload['temp'] = tem
+
+    def humi(self, hum):
+        self.payload['humi'] = hum
+
+    def pm25(self, pm):
+        self.payload['pm25'] = pm
+
+    def print(self):
+        BLINKER_LOG_ALL(self.payload)
+        Blinker.aliPrint(self.payload)
+        self.payload.clear()
+
+BlinkerAliGenie = BLINKERA_LIGENIE()
 
 BUILTIN_SWITCH = BlinkerSwitch()
