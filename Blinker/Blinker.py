@@ -66,6 +66,16 @@ class Protocol():
         self.aliRelateColorTempFunc = None
         self.aliQueryFunc = None
 
+        self.duerPowerSrareFunc = None
+        self.duerSetColorFunc = None
+        self.duerSetModeFunc = None
+        self.duerSetcModeFunc = None
+        self.duerSetBrightFunc = None
+        self.duerRelateBrightFunc = None
+        # self.aliSetColorTempFunc = None
+        # self.aliRelateColorTempFunc = None
+        self.duerQueryFunc = None
+
 bProto = Protocol()
 
 wlan = WLAN(STA_IF)
@@ -473,6 +483,36 @@ class BlinkerMpy:
     def aliPrint(self, data):
         bProto.conn1.aliPrint(data)
 
+    def attachDuerOSSetPowerState(self, _func):
+        bProto.duerPowerSrareFunc = _func
+    
+    def attachDuerOSSetPowerState(self, _func):
+        bProto.duerSetColorFunc = _func
+
+    def attachDuerOSSetMode(self, _func):
+        bProto.duerSetModeFunc = _func
+
+    def attachDuerOSSetcMode(self, _func):
+        bProto.duerSetcModeFunc = _func
+
+    def attachDuerOSSetBrightness(self, _func):
+        bProto.duerSetBrightFunc = _func
+
+    def attachDuerOSRelativeBrightness(self, _func):
+        bProto.duerRelateBrightFunc = _func
+
+    # def attachAliGenieSetColorTemperature(self, _func):
+    #     bProto.aliSetColorTempFunc = _func
+
+    # def attachAliGenieRelativeColorTemperature(self, _func):
+    #     bProto.aliRelateColorTempFunc = _func
+
+    def attachDuerOSQuery(self, _func):
+        bProto.duerQueryFunc = _func
+
+    def duerPrint(self, data):
+        bProto.conn1.duerPrint(data)
+
 Blinker = BlinkerMpy()
 
 class BlinkerButton(object):
@@ -704,6 +744,8 @@ class BlinkerSwitch(object):
     def print(self, _state):
         Blinker.print(self.name, _state)
 
+BUILTIN_SWITCH = BlinkerSwitch()
+
 class BLINKERA_LIGENIE():
     def __init__(self):
         self.payload = {}
@@ -768,4 +810,78 @@ class BLINKERA_LIGENIE():
 
 BlinkerAliGenie = BLINKERA_LIGENIE()
 
-BUILTIN_SWITCH = BlinkerSwitch()
+class BLINKERA_DUEROS():
+    def __init__(self):
+        self.payload = {}
+
+    def attachPowerState(self, _func):
+        Blinker.attachDuerOSSetPowerState(_func)
+
+    def attachColor(self, _func):
+        Blinker.attachDuerOSSetColor(_func)
+
+    def attachMode(self, _func):
+        Blinker.attachDuerOSSetMode(_func)
+
+    def attachCancelMode(self, _func):
+        Blinker.attachDuerOSSetcMode(_func)
+    
+    def attachBrightness(self, _func):
+        Blinker.attachDuerOSSetBrightness(_func)
+
+    def attachRelativeBrightness(self, _func):
+        Blinker.attachDuerOSRelativeBrightness(_func)
+
+    # def attachColorTemperature(self, _func):
+    #     Blinker.attachAliGenieSetColorTemperature(_func)
+
+    # def attachRelativeColorTemperature(self, _func):
+    #     Blinker.attachAliGenieRelativeColorTemperature(_func)
+
+    def attachQuery(self, _func):
+        Blinker.attachDuerOSQuery(_func)
+
+    def powerState(self, state, num = None):
+        self.payload['pState'] = state
+        if num :
+            self.payload['num'] = num
+
+    def color(self, clr):
+        self.payload['clr'] = clr
+
+    def mode(self, md):
+        self.payload['mode'] = ['', md]
+
+    # def colorTemp(self, clrTemp):
+    #     self.payload['colTemp'] = clrTemp
+
+    def brightness(self, bright):
+        self.payload['bright'] = ['', bright]
+
+    def temp(self, tem):
+        self.payload['temp'] = tem
+
+    def humi(self, hum):
+        self.payload['humi'] = hum
+
+    def pm25(self, pm):
+        self.payload['pm25'] = pm
+
+    def pm10(self, pm):
+        self.payload['pm10'] = pm
+
+    def co2(self, pm):
+        self.payload['co2'] = pm
+
+    def aqi(self, pm):
+        self.payload['aqi'] = pm
+
+    def time(self, pm):
+        self.payload['time'] = pm
+
+    def print(self):
+        BLINKER_LOG_ALL(self.payload)
+        Blinker.duerPrint(self.payload)
+        self.payload.clear()
+
+BlinkerDuerOS = BLINKERA_DUEROS()

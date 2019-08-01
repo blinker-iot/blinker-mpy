@@ -25,6 +25,7 @@ class MQTTProtocol(object):
     isAlive = False
     isAliAlive = False
     printTime = 0
+    aliPrintTime = 0
     kaTime = 0
     aliKaTime = 0
     debug = BLINKER_DEBUG
@@ -44,11 +45,29 @@ class BlinkerMQTT(MQTTProtocol):
             self.isAlive = False
             return False
 
+    def checkAliKA(self):
+        if self.isAliAlive is False:
+            return False
+        if (millis() - self.aliKaTime) < BLINKER_MQTT_KEEPALIVE:
+            return True
+        else:
+            self.isAliAlive = False
+            return False
+
     def checkCanPrint(self):
         if self.checkKA() is False:
             BLINKER_ERR_LOG("MQTT NOT ALIVE OR MSG LIMIT")
             return False
         if (millis() - self.printTime) >= BLINKER_MQTT_MSG_LIMIT or self.printTime == 0:
+            return True
+        BLINKER_ERR_LOG("MQTT NOT ALIVE OR MSG LIMIT")
+        return False
+
+    def checkAliCanPrint(self):
+        if self.checkAliKA() is False:
+            BLINKER_ERR_LOG("MQTT NOT ALIVE OR MSG LIMIT")
+            return False
+        if (millis() - self.aliPrintTime) >= BLINKER_MQTT_MSG_LIMIT or self.aliPrintTime == 0:
             return True
         BLINKER_ERR_LOG("MQTT NOT ALIVE OR MSG LIMIT")
         return False
@@ -210,12 +229,15 @@ class MQTTClients():
         self.bmqtt.printTime = millis()
 
     def aliPrint(self, msg):
+        if self.bmqtt.checkAliCanPrint() is False:
+            return
         payload = {'fromDevice': self.bmqtt.deviceName, 'toDevice': 'AliGenie_r', 'data': msg , 'deviceType': 'vAssistant'}
         payload = ujson.dumps(payload)
         # if self.bmqtt.isDebugAll() is True:
         BLINKER_LOG_ALL('Publish topic: ', self.bmqtt.pubtopic)
         BLINKER_LOG_ALL('payload: ', payload)
-        self.client.publish(self.bmqtt.pubtopic, payload)    
+        self.client.publish(self.bmqtt.pubtopic, payload)
+        self.bmqtt.aliPrintTime = millis()
 
     def duerPrint(self, msg):
         payload = {'fromDevice': self.bmqtt.deviceName, 'toDevice': 'DuerOS_r', 'data': msg , 'deviceType': 'vAssistant'}
