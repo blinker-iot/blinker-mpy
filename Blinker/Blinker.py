@@ -290,14 +290,59 @@ class BlinkerMpy:
             data = ujson.loads(data)
             BLINKER_LOG(data)
             # if data.has_key('set'):
-            if 'set' in data.keys():
+            if 'get' in data.keys():
+                _num = 0
+                if 'num' in data.keys():
+                    _num = data['num']
+                data = data['get']
+                if data == 'state':
+                    if bProto.aliType == '&aliType=multi_outlet':
+                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_ALL_NUMBER, _num)
+                    else :
+                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_ALL_NUMBER)
+                elif data == 'pState':
+                    if bProto.aliQueryFunc:
+                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_POWERSTATE_NUMBER)
+                elif data == 'col':
+                    if bProto.aliQueryFunc:
+                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_COLOR_NUMBER)
+                elif data == 'clr':
+                    if bProto.aliQueryFunc:
+                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_COLOR_NUMBER)
+                elif data == 'colTemp':
+                    if bProto.aliQueryFunc:
+                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_COLORTEMP_NUMBER)
+                elif data == 'bright':
+                    if bProto.aliQueryFunc:
+                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_BRIGHTNESS_NUMBER)
+                elif data == 'temp':
+                    if bProto.aliQueryFunc:
+                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_TEMP_NUMBER)
+                elif data == 'humi':
+                    if bProto.aliQueryFunc:
+                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_HUMI_NUMBER)
+                elif data == 'pm25':
+                    if bProto.aliQueryFunc:
+                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_PM25_NUMBER)
+                elif data == 'pState':
+                    if bProto.aliQueryFunc:
+                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_POWERSTATE_NUMBER)
+                elif data == 'mode':
+                    if bProto.aliQueryFunc:
+                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_MODE_NUMBER)
+            
+            # elif data.has_key('get'):
+            elif 'set' in data.keys():
                 data = data['set']
+                _num = 0
+                if 'num' in data.keys():
+                    _num = data['num']
                 for key, value in data.items():
                     if key == 'pState':
                         if bProto.aliPowerSrareFunc:
-                            # if data.has_key('num'):
-                            if 'num' in data.keys():
-                                bProto.aliPowerSrareFunc(value, data['num'])
+                            # if data.has_key('num'):                            
+                            if bProto.aliType == '&aliType=multi_outlet':
+                                bProto.aliPowerSrareFunc(value, _num)
                             else :
                                 bProto.aliPowerSrareFunc(value)
                     elif key == 'col':
@@ -330,42 +375,6 @@ class BlinkerMpy:
                     elif key == 'cMode':
                         if bProto.aliSetcModeFunc:
                             bProto.aliSetcModeFunc(value)
-            # elif data.has_key('get'):
-            elif 'get' in data.keys():
-                data = data['get']
-                if data == 'state':
-                    if bProto.aliQueryFunc:
-                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_ALL_NUMBER)
-                elif data == 'pState':
-                    if bProto.aliQueryFunc:
-                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_POWERSTATE_NUMBER)
-                elif data == 'col':
-                    if bProto.aliQueryFunc:
-                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_COLOR_NUMBER)
-                elif data == 'clr':
-                    if bProto.aliQueryFunc:
-                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_COLOR_NUMBER)
-                elif data == 'colTemp':
-                    if bProto.aliQueryFunc:
-                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_COLORTEMP_NUMBER)
-                elif data == 'bright':
-                    if bProto.aliQueryFunc:
-                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_BRIGHTNESS_NUMBER)
-                elif data == 'temp':
-                    if bProto.aliQueryFunc:
-                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_TEMP_NUMBER)
-                elif data == 'humi':
-                    if bProto.aliQueryFunc:
-                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_HUMI_NUMBER)
-                elif data == 'pm25':
-                    if bProto.aliQueryFunc:
-                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_PM25_NUMBER)
-                elif data == 'pState':
-                    if bProto.aliQueryFunc:
-                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_POWERSTATE_NUMBER)
-                elif data == 'mode':
-                    if bProto.aliQueryFunc:
-                        bProto.aliQueryFunc(BLINKER_CMD_QUERY_MODE_NUMBER)
 
         except ValueError:
             pass
