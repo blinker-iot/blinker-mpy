@@ -293,7 +293,7 @@ class BlinkerMpy:
             if 'get' in data.keys():
                 _num = 0
                 if 'num' in data.keys():
-                    _num = data['num']
+                    _num = int(data['num'])
                 data = data['get']
                 if data == 'state':
                     if bProto.aliType == '&aliType=multi_outlet':
@@ -336,7 +336,7 @@ class BlinkerMpy:
                 data = data['set']
                 _num = 0
                 if 'num' in data.keys():
-                    _num = data['num']
+                    _num = int(data['num'])
                 for key, value in data.items():
                     if key == 'pState':
                         if bProto.aliPowerSrareFunc:

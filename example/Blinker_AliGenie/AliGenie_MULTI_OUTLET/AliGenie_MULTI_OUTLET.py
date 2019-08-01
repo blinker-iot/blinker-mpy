@@ -22,7 +22,7 @@ number1 = BlinkerNumber('num-abc')
 
 counter = 0
 pinValue = 0
-wsState = 'on'
+wsState = ['off', 'off', 'off', 'off', 'off']
 
 p2 = Pin(2, Pin.OUT)
 p2.value(pinValue)
@@ -32,6 +32,13 @@ def aligeniePowerState(state, num):
 
     BLINKER_LOG("need set outlet: ", num, ", power state: ", state)
 
+    global wsState
+    wsState[num] = state
+
+    if num == 0 and state == 'false':
+        for i in len(wsState):
+            wsState[i] = state
+
     BlinkerAliGenie.powerState(state, num)
     BlinkerAliGenie.print()
 
@@ -40,15 +47,22 @@ def aligenieQuery(queryCode, num):
 
     BLINKER_LOG("AliGenie Query outlet: ", num,", codes: ", queryCode)
 
+    global wsState
+    state = 'off'
+    
+    for i, val in enumerate(wsState) :
+        if i == num :
+            state = val
+
     if queryCode == BLINKER_CMD_QUERY_ALL_NUMBER :
         BLINKER_LOG('AliGenie Query All')
-        BlinkerAliGenie.powerState(wsState, num)
+        BlinkerAliGenie.powerState(state, num)
         BlinkerAliGenie.print()
     elif queryCode == BLINKER_CMD_QUERY_POWERSTATE_NUMBER :
-        BlinkerAliGenie.powerState(wsState, num)
+        BlinkerAliGenie.powerState(state, num)
         BlinkerAliGenie.print()
     else :
-        BlinkerAliGenie.powerState(wsState, num)
+        BlinkerAliGenie.powerState(state, num)
         BlinkerAliGenie.print()
 
 def button1_callback(state):
@@ -83,3 +97,4 @@ if __name__ == '__main__':
 
     while True:
         Blinker.run()
+
