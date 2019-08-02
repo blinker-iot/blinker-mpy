@@ -276,6 +276,98 @@ class MQTTClients():
         BLINKER_LOG_ALL('payload: ', payload)
         self.client.publish(self.bmqtt.pubtopic, payload)
 
+    def sms(self, msg):
+        if self.bmqtt.checkSMS() is False:
+            return
+        payload = ujson.dumps({'deviceName':self.bmqtt.deviceName, 'key': self.auth, 'msg': msg})
+        response = requests.post('https://iotdev.clz.me/api/v1/user/device/sms',
+                                 data=payload, headers={'Content-Type': 'application/json'})
+
+        self.bmqtt.smsTime = millis()
+        data = response.json()
+        # if self.bmqtt.isDebugAll() is True:
+        BLINKER_LOG_ALL('response: ', data)
+        if data[BLINKER_CMD_MESSAGE] != 1000:
+            BLINKER_ERR_LOG(data[BLINKER_CMD_DETAIL])
+
+    def push(self, msg):
+        if self.bmqtt.checkPUSH() is False:
+            return
+        payload = ujson.dumps({'deviceName':self.bmqtt.deviceName, 'key': self.auth, 'msg': msg})
+        response = requests.post('https://iotdev.clz.me/api/v1/user/device/push',
+                                 data=payload, headers={'Content-Type': 'application/json'})
+
+        self.bmqtt.pushTime = millis()
+        data = response.json()
+        # if self.bmqtt.isDebugAll() is True:
+        BLINKER_LOG_ALL('response: ', data)
+        if data[BLINKER_CMD_MESSAGE] != 1000:
+            BLINKER_ERR_LOG(data[BLINKER_CMD_DETAIL])
+
+    def wechat(self, title, state, msg):
+        if self.bmqtt.checkWECHAT() is False:
+            return
+        payload = ujson.dumps({'deviceName':self.bmqtt.deviceName, 'key': self.auth, 'title':title, 'state':state, 'msg': msg})
+        response = requests.post('https://iotdev.clz.me/api/v1/user/device/wxMsg/',
+                                 data=payload, headers={'Content-Type': 'application/json'})
+
+        self.bmqtt.pushTime = millis()
+        data = response.json()
+        # if self.bmqtt.isDebugAll() is True:
+        BLINKER_LOG_ALL('response: ', data)
+        if data[BLINKER_CMD_MESSAGE] != 1000:
+            BLINKER_ERR_LOG(data[BLINKER_CMD_DETAIL])
+
+    def dataUpdate(self, msg):
+        payload = ujson.dumps({'deviceName':self.bmqtt.deviceName, 'key': self.auth, 'data': msg})
+        response = requests.post('https://iotdev.clz.me/api/v1/user/device/cloudStorage/',
+                                 data=payload, headers={'Content-Type': 'application/json'})
+
+        self.bmqtt.pushTime = millis()
+        data = response.json()
+        # if self.bmqtt.isDebugAll() is True:
+        BLINKER_LOG_ALL('response: ', data)
+        if data[BLINKER_CMD_MESSAGE] != 1000:
+            BLINKER_ERR_LOG(data[BLINKER_CMD_DETAIL])
+            return False
+        return True
+
+    def weather(self, city):
+        if self.bmqtt.checkWEATHER() is False:
+            return
+        host = 'https://iotdev.clz.me'
+        url = '/api/v1/user/device/weather/now?deviceName=' + self.bmqtt.deviceName + '&key=' + self.auth + '&location=' + city
+
+        r = requests.get(url=host + url)
+        data = ''
+
+        self.bmqtt.weatherTime = millis()
+
+        # if r.status_code != 200:
+        #     BLINKER_ERR_LOG('Device Auth Error!')
+        #     return
+        # else:
+        data = r.json()
+        return data['detail']
+
+    def aqi(self, city):
+        if self.bmqtt.checkAQI() is False:
+            return
+        host = 'https://iotdev.clz.me'
+        url = '/api/v1/user/device/weather/now?deviceName=' + self.bmqtt.deviceName + '&key=' + self.auth + '&location=' + city
+
+        r = requests.get(url=host + url)
+        data = ''       
+
+        self.bmqtt.aqiTime = millis()
+
+        # if r.status_code != 200:
+        #     BLINKER_ERR_LOG('Device Auth Error!')
+        #     return
+        # else:
+        data = r.json()
+        return data['detail']
+
     def connect(self):
         if self.isMQTTinit is False :
             self.bmqtt = self.mProto.getInfo(self.auth, self.aliType, self.duerType)
