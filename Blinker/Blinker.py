@@ -385,7 +385,7 @@ class BlinkerMpy:
         finally:
             pass
 
-    def duerosParse(self):
+    def duerParse(self):
         data = bProto.msgBuf
         if not data:
             return
@@ -590,7 +590,7 @@ class BlinkerMpy:
     def attachDuerOSSetPowerState(self, _func):
         bProto.duerPowerSrareFunc = _func
     
-    def attachDuerOSSetPowerState(self, _func):
+    def attachDuerOSSetColor(self, _func):
         bProto.duerSetColorFunc = _func
 
     def attachDuerOSSetMode(self, _func):
