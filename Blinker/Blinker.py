@@ -3,6 +3,8 @@ try:
 except ImportError:
     import requests
 import ujson
+import ntptime
+import utime
 from network import STA_IF, WLAN
 from Blinker.BlinkerConfig import *
 from Blinker.BlinkerDebug import *
@@ -75,6 +77,8 @@ class Protocol():
         # self.aliSetColorTempFunc = None
         # self.aliRelateColorTempFunc = None
         self.duerQueryFunc = None
+
+        self.ntpInit = False
 
 bProto = Protocol()
 
@@ -155,9 +159,56 @@ class BlinkerMpy:
             #     bProto.isRead = True
             #     bProto.proto2.wsProto.isRead = False
             #     BlinkerMpy.parse(self)
+    
+    def ntpInit(self):
+        if bProto.ntpInit is False:
+            ntptime.settime()
+            t = utime.time()
+            # import utime
+            tm = utime.localtime(t + 8 * 60 * 60)
+            tm = tm[0:3] + (0,) + tm[3:6] + (0,)
+            machine.RTC().datetime(tm)
+            bProto.ntpInit = True
+    
+    def vibrate(self, time = 200):
+        if time > 1000:
+            time = 1000
+        BlinkerMpy.print(self, BLINKER_CMD_VIBRATE, time)
+
+    def time(self):
+        return time.time() - 8*60*60
+
+    def second(self):
+        (_year, _month, _mday, _hour, _minute, _second, _weekday, _yearday) = utime.localtime()
+        return _second
+
+    def minute(self):
+        (_year, _month, _mday, _hour, _minute, _second, _weekday, _yearday) = utime.localtime()
+        return _minute
+
+    def hour(self):
+        (_year, _month, _mday, _hour, _minute, _second, _weekday, _yearday) = utime.localtime()
+        return _hour
+
+    def mday(self):
+        (_year, _month, _mday, _hour, _minute, _second, _weekday, _yearday) = utime.localtime()
+        return _mday
+
+    def wday(self):
+        (_year, _month, _mday, _hour, _minute, _second, _weekday, _yearday) = utime.localtime()
+        return _weekday
+
+    def month(self):
+        (_year, _month, _mday, _hour, _minute, _second, _weekday, _yearday) = utime.localtime()
+        return _month
+
+    def year(self):
+        (_year, _month, _mday, _hour, _minute, _second, _weekday, _yearday) = utime.localtime()
+        return _year
 
     def run(self):
         if wlan.isconnected():
+            BlinkerMpy.ntpInit(self)
             bProto.conn1.connect()
         else:
             BLINKER_LOG('network disconnected')
@@ -236,6 +287,9 @@ class BlinkerMpy:
                 BlinkerMpy._print(self, ujson.loads(bProto.sendBuf))
                 bProto.sendBuf = ''
                 bProto.isFormat = False
+
+    def notify(self, msg):
+        BlinkerMpy.print(self, BLINKER_CMD_NOTICE, msg)
 
     def connected(self):
         if bProto.state is CONNECTED:
@@ -556,6 +610,36 @@ class BlinkerMpy:
                 bProto.heartbeatFunc()
             if bProto.summaryFunc :
                 bProto.summaryFunc()
+
+    def sms(self, msg):
+        if bProto.conType == "BLINKER_MQTT":
+            bProto.conn1.sms(msg)
+        else:
+            BLINKER_ERR_LOG('This code is intended to run on the MQTT!')
+
+    def push(self, msg):
+        if bProto.conType == "BLINKER_MQTT":
+            bProto.conn1.push(msg)
+        else:
+            BLINKER_ERR_LOG('This code is intended to run on the MQTT!')
+
+    def wechat(self, title, state, msg):
+        if bProto.conType == "BLINKER_MQTT":
+            bProto.conn1.wechat(title, state, msg)
+        else:
+            BLINKER_ERR_LOG('This code is intended to run on the MQTT!')
+
+    def weather(self, city = 'default'):
+        if bProto.conType == "BLINKER_MQTT":
+            return bProto.conn1.weather(city)
+        else:
+            BLINKER_ERR_LOG('This code is intended to run on the MQTT!')
+
+    def aqi(self, city = 'default'):
+        if bProto.conType == "BLINKER_MQTT":
+            return bProto.conn1.aqi(city)
+        else:
+            BLINKER_ERR_LOG('This code is intended to run on the MQTT!')
 
     def attachAliGenieSetPowerState(self, _func):
         bProto.aliPowerSrareFunc = _func
