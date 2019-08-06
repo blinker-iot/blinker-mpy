@@ -5,6 +5,7 @@ except ImportError:
 import ujson
 import ntptime
 import utime
+import machine
 from network import STA_IF, WLAN
 from Blinker.BlinkerConfig import *
 from Blinker.BlinkerDebug import *
@@ -153,6 +154,10 @@ class BlinkerMpy:
                 bProto.msgBuf = bProto.conn1.bmqtt.msgBuf
                 bProto.conn1.bmqtt.isAliRead = False
                 BlinkerMpy.aliParse(self)
+            if bProto.conn1.bmqtt.isDuerRead is True:
+                bProto.msgBuf = bProto.conn1.bmqtt.msgBuf
+                bProto.conn1.bmqtt.isDuerRead = False
+                BlinkerMpy.duerParse(self)
             # if bProto.proto2.wsProto.isRead is True:
             #     bProto.msgBuf = str(bProto.proto2.wsProto.msgBuf)
             #     bProto.msgFrom = "BLINKER_WIFI"
@@ -162,13 +167,13 @@ class BlinkerMpy:
     
     def ntpInit(self):
         if bProto.ntpInit is False:
-            ntptime.settime()
-            t = utime.time()
-            # import utime
-            tm = utime.localtime(t + 8 * 60 * 60)
-            tm = tm[0:3] + (0,) + tm[3:6] + (0,)
-            machine.RTC().datetime(tm)
-            bProto.ntpInit = True
+            if wlan.isconnected():
+                # ntptime.settime()
+                # t = utime.time()
+                # tm = utime.localtime(t + 8 * 60 * 60)
+                # tm = tm[0:3] + (0,) + tm[3:6] + (0,)
+                # machine.RTC().datetime(tm)
+                bProto.ntpInit = True
     
     def vibrate(self, time = 200):
         if time > 1000:

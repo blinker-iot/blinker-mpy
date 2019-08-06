@@ -226,18 +226,21 @@ class MQTTClients():
         fromDevice = data['fromDevice']
         data = data['data']
         data = ujson.dumps(data)
-        BLINKER_LOG_ALL('data: ', data)
+        BLINKER_LOG_ALL('fromDevice:', fromDevice, ', data: ', data)
         if fromDevice == self.bmqtt.uuid :
+            BLINKER_LOG_ALL('from uuid')
             self.bmqtt.msgBuf = data
             self.bmqtt.isRead = True
             self.bmqtt.isAlive = True
             self.bmqtt.kaTime = millis()
         elif fromDevice == 'AliGenie':
+            BLINKER_LOG_ALL('from aligenie')
             self.bmqtt.msgBuf = data
             self.bmqtt.isAliRead = True
             self.bmqtt.isAliAlive = True
             self.bmqtt.aliKaTime = millis()    
         elif fromDevice == 'DuerOS':
+            BLINKER_LOG_ALL('from dueros')
             self.bmqtt.msgBuf = data
             self.bmqtt.isDuerRead = True
             self.bmqtt.isDuerAlive = True
@@ -381,6 +384,8 @@ class MQTTClients():
             self.client.subscribe(self.bmqtt.subtopic)
 
             self.mqttPing = millis()
+
+            self.bmqtt.state = CONNECTED
         else :
             try:
                 self.client.check_msg()
