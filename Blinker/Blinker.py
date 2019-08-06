@@ -167,12 +167,13 @@ class BlinkerMpy:
     
     def ntpInit(self):
         if bProto.ntpInit is False:
+            time.sleep(5)
             if wlan.isconnected():
-                # ntptime.settime()
-                # t = utime.time()
-                # tm = utime.localtime(t + 8 * 60 * 60)
-                # tm = tm[0:3] + (0,) + tm[3:6] + (0,)
-                # machine.RTC().datetime(tm)
+                ntptime.settime()
+                t = utime.time()
+                tm = utime.localtime(t + 8 * 60 * 60)
+                tm = tm[0:3] + (0,) + tm[3:6] + (0,)
+                machine.RTC().datetime(tm)
                 bProto.ntpInit = True
     
     def vibrate(self, time = 200):
@@ -181,33 +182,49 @@ class BlinkerMpy:
         BlinkerMpy.print(self, BLINKER_CMD_VIBRATE, time)
 
     def time(self):
+        if bProto.ntpInit is False:
+            return millis()
         return time.time() - 8*60*60
 
     def second(self):
+        if bProto.ntpInit is False:
+            return -1
         (_year, _month, _mday, _hour, _minute, _second, _weekday, _yearday) = utime.localtime()
         return _second
 
     def minute(self):
+        if bProto.ntpInit is False:
+            return -1
         (_year, _month, _mday, _hour, _minute, _second, _weekday, _yearday) = utime.localtime()
         return _minute
 
     def hour(self):
+        if bProto.ntpInit is False:
+            return -1
         (_year, _month, _mday, _hour, _minute, _second, _weekday, _yearday) = utime.localtime()
         return _hour
 
     def mday(self):
+        if bProto.ntpInit is False:
+            return -1
         (_year, _month, _mday, _hour, _minute, _second, _weekday, _yearday) = utime.localtime()
         return _mday
 
     def wday(self):
+        if bProto.ntpInit is False:
+            return -1
         (_year, _month, _mday, _hour, _minute, _second, _weekday, _yearday) = utime.localtime()
         return _weekday
 
     def month(self):
+        if bProto.ntpInit is False:
+            return -1
         (_year, _month, _mday, _hour, _minute, _second, _weekday, _yearday) = utime.localtime()
         return _month
 
     def year(self):
+        if bProto.ntpInit is False:
+            return -1
         (_year, _month, _mday, _hour, _minute, _second, _weekday, _yearday) = utime.localtime()
         return _year
 
