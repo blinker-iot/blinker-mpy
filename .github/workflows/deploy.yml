@@ -38,7 +38,7 @@ jobs:
         uses: garygrossgarten/github-action-scp@v0.5.3
         with:
           local: blinker-mpy-${{steps.version.outputs.prop}}.zip
-          remote: ${{ secrets.REMOTE_PATH }}/blinker-mpyt-${{steps.version.outputs.prop}}.zip
+          remote: ${{ secrets.REMOTE_PATH }}/blinker-mpy-${{steps.version.outputs.prop}}.zip
           host: ${{ secrets.SERVER_IP }}
           username: ubuntu
           privateKey: ${{ secrets.SSH_PRIVATE_KEY }}
