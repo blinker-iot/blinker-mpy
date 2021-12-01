@@ -169,7 +169,10 @@ class BlinkerMpy:
         if bProto.ntpInit is False:
             time.sleep(5)
             if wlan.isconnected():
-                ntptime.settime()
+                try:
+                    ntptime.settime()
+                except:
+                    print('sync time error, skip.')
                 t = utime.time()
                 tm = utime.localtime(t + 8 * 60 * 60)
                 tm = tm[0:3] + (0,) + tm[3:6] + (0,)
