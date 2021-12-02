@@ -181,11 +181,13 @@ class BlinkerMQTT(MQTTProtocol):
         if broker == 'aliyun':
             bmt.host = BLINKER_MQTT_ALIYUN_HOST
             bmt.port = BLINKER_MQTT_ALIYUN_PORT
-            bmt.subtopic = '/' + productKey + '/' + deviceName + '/r'
-            bmt.pubtopic = '/' + productKey + '/' + deviceName + '/s'
-            bmt.clientID = deviceName
-            bmt.userName = iotId
-
+        else:
+            bmt.host = data['detail']['host'].replace('mqtts://','')
+            bmt.port = data['detail']['port']
+        bmt.subtopic = '/device/' + deviceName + '/r'
+        bmt.pubtopic = '/device/' + deviceName + '/s'
+        bmt.clientID = deviceName
+        bmt.userName = iotId
         bmt.deviceName = deviceName
         bmt.password = iotToken
         bmt.uuid = uuid
@@ -196,7 +198,6 @@ class BlinkerMQTT(MQTTProtocol):
         BLINKER_LOG_ALL('password: ', bmt.password)
         BLINKER_LOG_ALL('subtopic: ', bmt.subtopic)
         BLINKER_LOG_ALL('pubtopic: ', bmt.pubtopic)
-
         return bmt
 
 def on_message(topic, msg):
